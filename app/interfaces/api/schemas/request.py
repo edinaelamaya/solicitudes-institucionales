@@ -2,14 +2,16 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.domain.value_objects.request_catalogs import RequestCategory, RequestPriority, RequestStatus
+
 
 class RequestBaseSchema(BaseModel):
     external_identifier: str = Field(min_length=1, max_length=100)
-    category: str = Field(min_length=1, max_length=60)
+    category: RequestCategory
     requester_name: str = Field(min_length=1, max_length=150)
     requester_email: EmailStr
     description: str = Field(min_length=1)
-    priority: str = Field(min_length=1, max_length=20)
+    priority: RequestPriority
 
 
 class RequestCreateSchema(RequestBaseSchema):
@@ -17,7 +19,7 @@ class RequestCreateSchema(RequestBaseSchema):
 
 
 class RequestStatusUpdateSchema(BaseModel):
-    status: str = Field(min_length=1, max_length=20)
+    status: RequestStatus
 
 
 class RequestResponseSchema(BaseModel):

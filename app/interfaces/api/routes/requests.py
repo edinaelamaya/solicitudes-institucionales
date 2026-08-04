@@ -5,6 +5,7 @@ from app.application.use_cases.create_request import CreateRequestUseCase
 from app.application.use_cases.get_request import GetRequestUseCase
 from app.application.use_cases.get_requests import ListRequestsUseCase
 from app.application.use_cases.update_request_status import UpdateRequestStatusUseCase
+from app.domain.value_objects.request_catalogs import RequestCategory, RequestPriority, RequestStatus
 from app.interfaces.api.dependencies import (
     get_create_request_use_case,
     get_get_request_use_case,
@@ -29,11 +30,11 @@ def create_request(
     result = use_case.execute(
         CreateRequestCommand(
             external_identifier=payload.external_identifier,
-            category=payload.category,
+            category=payload.category.value,
             requester_name=payload.requester_name,
             requester_email=str(payload.requester_email),
             description=payload.description,
-            priority=payload.priority,
+            priority=payload.priority.value,
         )
     )
     return RequestResponseSchema.model_validate(result)
@@ -41,9 +42,9 @@ def create_request(
 
 @router.get("", response_model=RequestListResponseSchema)
 def list_requests(
-    status_filter: str | None = Query(default=None, alias="status"),
-    category: str | None = None,
-    priority: str | None = None,
+    status_filter: RequestStatus | None = Query(default=None, alias="status"),
+    category: RequestCategory | None = None,
+    priority: RequestPriority | None = None,
     use_case: ListRequestsUseCase = Depends(get_list_requests_use_case),
 ) -> RequestListResponseSchema:
     results = use_case.execute(status=status_filter, category=category, priority=priority)
@@ -65,5 +66,5 @@ def update_request_status(
     payload: RequestStatusUpdateSchema,
     use_case: UpdateRequestStatusUseCase = Depends(get_update_request_status_use_case),
 ) -> RequestResponseSchema:
-    result = use_case.execute(UpdateRequestStatusCommand(request_id=request_id, status=payload.status))
+    result = use_case.execute(UpdateRequestStatusCommand(request_id=request_id, status=payload.status.value))
     return RequestResponseSchema.model_validate(result)

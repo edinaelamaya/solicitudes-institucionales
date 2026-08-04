@@ -107,6 +107,22 @@ def test_create_request_endpoint_rejects_invalid_email(api_client) -> None:
     assert response.status_code == 422
 
 
+def test_create_request_endpoint_rejects_invalid_category(api_client) -> None:
+    response = api_client.post(
+        "/api/v1/solicitudes",
+        json={
+            "external_identifier": "EXT-001",
+            "category": "categoria-invalida",
+            "requester_name": "Ana Perez",
+            "requester_email": "ana@example.com",
+            "description": "No puedo entrar",
+            "priority": "alta",
+        },
+    )
+
+    assert response.status_code == 422
+
+
 def test_create_request_endpoint_rejects_duplicates(api_client) -> None:
     fake_use_case = FakeCreateUseCase(error=RequestAlreadyExistsError("request already exists"))
     api_client.app.dependency_overrides[get_create_request_use_case] = lambda: fake_use_case
@@ -134,6 +150,12 @@ def test_list_requests_endpoint_returns_items(api_client) -> None:
 
     assert response.status_code == 200
     assert len(response.json()["items"]) == 1
+
+
+def test_list_requests_endpoint_rejects_invalid_status_filter(api_client) -> None:
+    response = api_client.get("/api/v1/solicitudes?status=estado-invalido")
+
+    assert response.status_code == 422
 
 
 def test_get_request_endpoint_returns_existing_request(api_client) -> None:
@@ -166,3 +188,12 @@ def test_update_request_status_endpoint_returns_updated_request(api_client) -> N
 
     assert response.status_code == 200
     assert response.json()["status"] == "en proceso"
+
+
+def test_update_request_status_endpoint_rejects_invalid_status(api_client) -> None:
+    response = api_client.patch(
+        "/api/v1/solicitudes/1/estado",
+        json={"status": "estado-invalido"},
+    )
+
+    assert response.status_code == 422
